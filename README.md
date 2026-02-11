@@ -18,6 +18,17 @@ This project implements a **Zigbee Router** using the ESP32-C6 microcontroller. 
 -   **External 2.4GHz Antenna** (connected via U.FL)
 -   USB-C cable for programming and power
 
+### Antenna Selection Guide
+
+To get the best performance, you need a compatible external antenna. Here are the specs to look for:
+
+-   **Frequency**: **2.4 GHz** (WiFi/Zigbee standard). Do not use 868MHz or 5GHz antennas.
+-   **Connector**: **U.FL / IPEX1**. This is the small circular connector found on the XIAO ESP32C6.
+-   **Gain (dBi)**: A gain of **3dBi to 6dBi** is recommended for home usage (omnidirectional). Higher gain (8dBi+) might be too directional.
+
+**Recommended Example**:
+[Bingfu WiFi Antenne 2.4GHz 3dBi with U.FL to RP-SMA Cable](https://www.amazon.fr/dp/B09K41BDYL?ref=ppx_yo2ov_dt_b_fed_asin_title)
+
 ## Usage Guide
 
 ### 1. Environment Setup
