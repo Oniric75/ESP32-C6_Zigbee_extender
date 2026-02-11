@@ -78,6 +78,22 @@ W (time) ESP_ZB_ROUTER: =======================================================
 -   Ensure your **Zigbee Coordinator** (e.g., zigbee2mqtt, ZHA) is in **Permit Join** mode when you first power on this device.
 -   Once joined, it will automatically route traffic and report neighbors.
 
+### 6. Resetting Network Connection (Re-pairing)
+
+If you need to move the device to a new network or if it fails to rejoin, the most reliable method is to perform a full factory reset by erasing the flash memory using the USB cable.
+
+1.  **Remove the device** from your Zigbee coordinator (Zigbee2MQTT / ZHA).
+2.  **Connect the device** via USB.
+3.  **Run the erase command**:
+    ```bash
+    idf.py -p COMx erase-flash
+    ```
+4.  **Re-flash the firmware**:
+    ```bash
+    idf.py -p COMx flash monitor
+    ```
+5.  Enable **Permit Join** on your coordinator; the device will pair automatically as a fresh device.
+
 ## Troubleshooting
 
 -   **Weak Signal?**: Ensure the external antenna is securely connected to the U.FL connector. The code explicitly enables the RF switch for the external antenna on GPIO 3 and 14.
