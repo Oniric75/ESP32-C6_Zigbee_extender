@@ -1,100 +1,82 @@
 # ESP32-C6 Zigbee Router/Gateway Project
 
-This project implements a **Zigbee Router** using the ESP32-C6 microcontroller. It is designed to extend the range of your Zigbee network and can be used with boards like the **Seeed Studio XIAO ESP32C6**.
+This project implements a **Zigbee Router** using the **Seeed Studio XIAO ESP32C6**.
+It acts as a signal repeater to extend your home automation network and features a **Web Monitor Interface** to view signal quality (RSSI/LQI) in real-time on your smartphone.
 
 ## Features
 
 -   **Zigbee Router Role**: Acts as a signal repeater to extend network coverage.
--   **External Antenna Support**: Configured to use the external U.FL antenna for maximum range (specifically for the Seeed Studio XIAO ESP32C6).
--   **Max Transmission Power**: Set to **20dBm** to ensure the best possible signal strength.
--   **Signal Monitoring**: Periodically scans and logs neighboring Zigbee devices (Coordinator, Routers, End Devices) via the USB serial monitor, displaying:
-    -   RSSI (Signal strength)
-    -   LQI (Link Quality Indicator)
-    -   Device Type
+-   **Web Monitor Interface**: Host a local web server to view RSSI and LQI stats on your phone (no PC required).
+-   **WiFi & Zigbee Coexistence**: Optimized software coexistence to allow both radios to run simultaneously on the single-radio ESP32-C6.
+-   **External Antenna Support**: Configured to use the external U.FL antenna for maximum range (GPIO 3/14).
+-   **Max Transmission Power**: Set to **20dBm**.
 
 ## Hardware Requirements
 
 -   **ESP32-C6 Development Board** (Tested with Seeed Studio XIAO ESP32C6)
 -   **External 2.4GHz Antenna** (connected via U.FL)
--   USB-C cable for programming and power
+-   **USB-C cable** (power/programming)
 
 ### Antenna Selection Guide
+-   **Frequency**: 2.4 GHz
+-   **Connector**: U.FL / IPEX1
+-   **Recommended**: 3dBi to 6dBi gain.
 
-To get the best performance, you need a compatible external antenna. Here are the specs to look for:
+## Web Interface Monitoring
 
--   **Frequency**: **2.4 GHz** (WiFi/Zigbee standard). Do not use 868MHz or 5GHz antennas.
--   **Connector**: **U.FL / IPEX1**. This is the small circular connector found on the XIAO ESP32C6.
--   **Gain (dBi)**: A gain of **3dBi to 6dBi** is recommended for home usage (omnidirectional). Higher gain (8dBi+) might be too directional.
+The device hosts a web page to help you place it in the optimal location without needing a laptop connected via USB.
 
-**Recommended Example**:
-[Bingfu WiFi Antenne 2.4GHz 3dBi with U.FL to RP-SMA Cable](https://www.amazon.fr/dp/B09K41BDYL?ref=ppx_yo2ov_dt_b_fed_asin_title)
+1.  **Status**: Displays if the device is `Scanning`, `Connecting`, or `Connected` to the Zigbee network.
+2.  **Neighbors Table**: Lists all visible Zigbee neighbors.
+    -   **RSSI (Received Signal Strength)**: Signal volume (e.g., -60dBm). Higher is better (closer to 0).
+    -   **LQI (Link Quality Indicator)**: Signal clarity (0-255). Higher is better.
+        -   **255**: Perfect
+        -   **>100**: Good/Stable
+        -   **<50**: Poor/Unstable
+
+> **Tip**: Prioritize **LQI** over RSSI. A strong but "noisy" signal (High RSSI, Low LQI) is worse than a weaker but "clear" signal.
 
 ## Usage Guide
 
-### 1. Environment Setup
+### 1. Configuration
 
-Ensure you have the **Espressif ESP-IDF** framework installed and configured. If you are using VS Code, the **Espressif IDF** extension is highly recommended.
+To keep your WiFi credentials private, this project uses a separate configuration file.
 
-### 2. Compilation
+1.  Navigate to the `main/` directory.
+2.  Duplicate the example file `secrets.example.h` and name it `secrets.h`.
+3.  Open `main/secrets.h` and enter your WiFi credentials:
+    ```c
+    #define ESP_WIFI_SSID      "YOUR_WIFI_SSID"
+    #define ESP_WIFI_PASS      "YOUR_WIFI_PASSWORD"
+    ```
+    *(Note: `secrets.h` is already in `.gitignore`, so your passwords won't be committed).*
 
-Open a terminal in the project root directory and run:
+### 2. Build & Flash
 
 ```bash
 idf.py build
+idf.py -p COMx flash monitor
 ```
 
-*Note: The first build may take a few minutes.*
+*(Where `COMx` is your serial port).*
 
-### 3. Flashing the Device
+### 3. Usage
 
-Connect your ESP32-C6 to your computer. Find the correct COM port and run:
-
-```bash
-idf.py -p COMx flash
-```
-
-*(Replace `COMx` with your actual serial port, e.g., `COM3` on Windows or `/dev/ttyUSB0` on Linux/macOS).*
-
-### 4. Monitoring Output
-
-To view the logs and the signal strength of neighboring devices, run:
-
-```bash
-idf.py -p COMx monitor
-```
-
-You will see logs resembling the following every 3 seconds:
-
-```text
-W (time) ESP_ZB_ROUTER: ========== Scan Voisins #1 (RSSI > -90 dBm) ==========
-I (time) ESP_ZB_ROUTER: Addr: 0x0000 (Coord)  | RSSI: -65 dBm | LQI: 255
-I (time) ESP_ZB_ROUTER: Addr: 0x1A2B (Router) | RSSI: -70 dBm | LQI: 180
-W (time) ESP_ZB_ROUTER: =======================================================
-```
-
-### 5. Zigbee Network Joining
-
--   The device is configured to join an existing Zigbee network automatically.
--   Ensure your **Zigbee Coordinator** (e.g., zigbee2mqtt, ZHA) is in **Permit Join** mode when you first power on this device.
--   Once joined, it will automatically route traffic and report neighbors.
-
-### 6. Resetting Network Connection (Re-pairing)
-
-If you need to move the device to a new network or if it fails to rejoin, the most reliable method is to perform a full factory reset by erasing the flash memory using the USB cable.
-
-1.  **Remove the device** from your Zigbee coordinator (Zigbee2MQTT / ZHA).
-2.  **Connect the device** via USB.
-3.  **Run the erase command**:
-    ```bash
-    idf.py -p COMx erase-flash
-    ```
-4.  **Re-flash the firmware**:
-    ```bash
-    idf.py -p COMx flash monitor
-    ```
-5.  Enable **Permit Join** on your coordinator; the device will pair automatically as a fresh device.
+1.  Power on the device.
+2.  Open your Serial Monitor initially to see the IP address.
+    -   *Log Example*: `ESP_ZB_ROUTER: got ip:192.168.1.50`
+3.  Open that IP in your phone's browser: `http://192.168.1.50`
+4.  Walk around your house with the device (powered by a power bank) and refresh the page to find the dead spots or the best repeater location.
 
 ## Troubleshooting
 
--   **Weak Signal?**: Ensure the external antenna is securely connected to the U.FL connector. The code explicitly enables the RF switch for the external antenna on GPIO 3 and 14.
--   **Not Joining?**: Verify your Coordinator is allowing new devices to join. You may need to factory reset the device if it was previously paired to another network (erase flash via `idf.py erase_flash` and re-flash).
+-   **"Scanned 0 Access Points"**: This indicates a Coexistence configuration issue or antenna failure. The current code uses a specific initialization sequence (WiFi Init -> Coex Enable -> Zigbee Start) to prevent this.
+-   **Web Interface not loading**: Ensure the device is powered. If the Zigbee stack crashes, the WiFi might also stop. Check the USB logs.
+-   **Low LQI**: Move the device away from metal objects, microwaves, or dense concrete walls.
+
+## Resetting (Re-pairing)
+
+To pair with a new Zigbee network:
+1.  **Erase Flash**: `idf.py -p COMx erase-flash`
+2.  **Re-flash**: `idf.py -p COMx flash`
+3.  Enable **Permit Join** on your Zigbee Coordinator.
